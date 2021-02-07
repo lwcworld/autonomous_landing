@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from Variables import filter_state, meas_state, alg_state, ctrl_state, status
 from Subscribers import *
 from Algorithms import *
