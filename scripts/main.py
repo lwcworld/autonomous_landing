@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     # set frequency
     freq_est = 20
-    freq_ctrl = 30  # 100 hz
+    freq_ctrl = 30
     freq = lcm(freq_est, freq_ctrl)
 
     rate = rospy.Rate(freq)
@@ -39,11 +39,11 @@ if __name__ == '__main__':
             a = update_H(a=a, T_now=T_now, T_vis=T_vis)
 
             if   a['P_H'][0] >= a['th_L'] and s['flag_KF_init']==False:
-                q, a = init_KF(q=q, a=a, m=m)
+                q, s = init_KF(q=q, s=a, m=m)
                 s['phase'] = 1
 
             elif a['P_H'][0] >= a['th_L'] and s['flag_KF_init']==True:
-                q, a = update_KF(q=q, m=m)
+                q = update_KF(q=q, m=m)
                 s['phase'] = 1
 
             elif a['P_H'][0] <  a['th_L']:

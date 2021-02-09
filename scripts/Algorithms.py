@@ -13,10 +13,10 @@ def update_H(a, T_now, T_vis):
 
     return a
 
-def init_KF(q, a, m):
+def init_KF(q, s, m):
     q['x_o'] = 3
-    a['flag_KF_init'] = True
-    return q, a
+    s['flag_KF_init'] = True
+    return q, s
 
 def update_KF(q, m):
     return q
