@@ -2,7 +2,7 @@ import numpy as np
 
 class filter_state:
     def __init__(self):
-        # ownship
+        # ownship (enu)
         self.x_o = 0
         self.y_o = 0
         self.z_o = 0
@@ -13,7 +13,7 @@ class filter_state:
         self.Pz_o = 0
         self.Pyaw_o = 0
 
-        # target
+        # target  (enu)
         self.x_t = 0
         self.y_t = 0
         self.z_t = 0
@@ -34,12 +34,14 @@ class filter_state:
 class meas_state:
     def __init__(self):
         # ownship
+        # (enu)
         self.x_o = 0
         self.y_o = 0
         self.z_o = 0
         self.vx_o = 0
         self.vy_o = 0
         self.vz_o = 0
+        # (ned)
         self.roll_o = 0
         self.pitch_o = 0
         self.yaw_o = 0
@@ -47,7 +49,13 @@ class meas_state:
         self.d_pitch_o = 0
         self.d_yaw_o = 0
 
+        # imu
+        self.imu_roll = 0
+        self.imu_pitch = 0
+        self.imu_yaw = 0
+
         # target
+        # (ned)
         self.px_t = 0
         self.py_t = 0
         self.r = 0
@@ -64,12 +72,26 @@ class meas_state:
         else:
             print('not defined variable')
 
-class alg_state:
+class param:
     def __init__(self):
-        self.N_H = 2
-        self.P_H = np.ones((self.N_H))/self.N_H
+        self.freq_est = 20
+        self.freq_ctrl = 20
+
+        self.N_H = 2 # number of hypothesis (0:landing condition, 1:not landing condition)
         self.th_L = 0.8 # threshold for landing possible
 
+        self.cm = np.array([[0.6, 0.4], [0.4, 0.5]]) # confusion matrix
+        self.P_H_min = 0.01
+
+        self.cam_bound = [1920, 1080] # camera resolution
+        self.th_viscen = 200 # threshold for target centered
+
+    def __getitem__(self,key):
+        return getattr(self, key)
+
+class alg_state:
+    def __init__(self):
+        self.P_H = np.array([0.1, 0.9]) # hypothetical probabilities
 
     def __getitem__(self,key):
         return getattr(self, key)
@@ -102,7 +124,6 @@ class status:
     def __init__(self):
         self.phase = 0 # 0:scenario, 1:landing
         self.flag_KF_init = False # checker for KF initiation
-
 
     def __getitem__(self, key):
         return getattr(self, key)
