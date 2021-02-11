@@ -37,18 +37,20 @@ if __name__ == '__main__':
         if count % (freq / freq_est) == 0:
             T_vis = m['T_vis']
 
-            a = update_H(a=a, m=m, p=p, T_now=T_now, T_vis=T_vis)
+            a = update_H(a=a, m=m, p=p, T_now=T_now)
 
             if   a['P_H'][0] >= p['th_L'] and s['flag_KF_init']==False:
-                q, s = init_KF(q=q, s=s, m=m)
+                q, ukf = init_KF(q=q, s=s, m=m, p=p)
                 s['phase'] = 1
+                s['flag_KF_init'] = True
 
             elif a['P_H'][0] >= p['th_L'] and s['flag_KF_init']==True:
-                q = update_KF(q=q, m=m)
+                q, ukf = update_KF(q=q, m=m, p=p, ukf=ukf, T_now=T_now)
                 s['phase'] = 1
 
             elif a['P_H'][0] <  p['th_L']:
                 s['phase'] = 0
+                s['flag_KF_init'] = False
 
         # control
         if count % (freq / freq_ctrl) == 0:

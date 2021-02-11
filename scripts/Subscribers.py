@@ -21,8 +21,7 @@ class Subscribers():
         rospy.Subscriber("/mavros/px4flow/ground_distance", Range, self.save_LRF)
         rospy.Subscriber("/target_pixel", PointStamped, self.save_target_pixel)
 
-        rospy.Subscriber('/mavros/imu/data', Imu, self.save_imu)
-        self.m['r'] = self.m['r'] + 5
+        # rospy.Subscriber('/mavros/imu/data', Imu, self.save_imu)
 
     def save_imu(self, msg):
         orientation_list = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
@@ -42,6 +41,7 @@ class Subscribers():
         quaternion_list = [qx, qy, qz, qw]
         self.m['x_o'], self.m['y_o'], self.m['z_o'] = x, y, z
         (self.m['roll_o'], self.m['pitch_o'], self.m['yaw_o']) = euler_from_quaternion(quaternion_list)
+        self.m['T_o'] = msg.header.stamp.to_sec()
 
     def save_vel(self, msg):
         vx = msg.twist.linear.x
@@ -56,11 +56,12 @@ class Subscribers():
         self.m['d_roll_o'], self.m['d_pitch_o'], self.m['d_yaw_o'] = d_roll, d_pitch, d_yaw
 
     def save_LRF(self, msg):
-        self.m['r'] = msg
+        self.m['r'] = msg.range
+        self.m['T_r'] = msg.header.stamp.to_sec()
 
     def save_target_pixel(self, msg):
-        self.m['px_t'] = msg.point.x
-        self.m['py_t'] = msg.point.y
-        self.m['px_t'] = -(self.m['py_t'] - self.p['cam_bound'][1] / 2)
-        self.m['py_t'] = (self.m['px_t'] - self.p['cam_bound'][0] / 2)
+        # self.m['px_t'] = msg.point.x
+        # self.m['py_t'] = msg.point.y
+        self.m['px_t'] = -(msg.point.y - self.p['cam_bound'][0] / 2)
+        self.m['py_t'] = (msg.point.x - self.p['cam_bound'][1] / 2)
         self.m['T_vis'] = msg.header.stamp.to_sec() ##

@@ -1,4 +1,4 @@
-
+import numpy as np
 def gcd(a, b):
     if b > a:
         tmp = a
@@ -13,3 +13,11 @@ def gcd(a, b):
 
 def lcm(a, b):
     return a * b // gcd(a, b)
+
+def diag_block_mat_slicing(L):
+    shp = L[0].shape
+    N = len(L)
+    r = range(N)
+    out = np.zeros((N,shp[0],N,shp[1]),dtype=int)
+    out[r,:,r,:] = L
+    return out.reshape(np.asarray(shp)*N)

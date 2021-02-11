@@ -20,7 +20,7 @@ class image_converter:
 
   def callback(self, data):
     try:
-      self.target_pixel.header.stamp = rospy.Time.now()
+      #self.target_pixel.header.stamp = rospy.Time.now()
 
       cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
       gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
@@ -31,6 +31,7 @@ class image_converter:
 
     circles = cv2.HoughCircles(blur_image, cv2.HOUGH_GRADIENT, 1.2, 30, None, 200)
     if circles is not None:
+        
         circles = np.uint16(np.around(circles))
         for i in circles[0,:]:
             cv2.circle(cv_image,(i[0], i[1]), i[2], (0, 255, 0), 2)
@@ -38,6 +39,7 @@ class image_converter:
 
             self.target_pixel.point.x = i[0]
             self.target_pixel.point.y = i[1]
+        self.target_pixel.header.stamp = rospy.Time.now()
 
     cv_image_resize = cv2.resize(cv_image, (960, 540))
     cv2.imshow('hough circle', cv_image_resize)
@@ -48,7 +50,7 @@ def main(args):
   ic = image_converter()
 
   rate = rospy.Rate(20.0)
-  pixel_pub = rospy.Publisher('/target_pixel', PointStamped, queue_size=10)
+  pixel_pub = rospy.Publisher('/target_pixel', PointStamped, queue_size=2)
   while not rospy.is_shutdown():
       pixel_pub.publish(ic.target_pixel)
       rate.sleep()
