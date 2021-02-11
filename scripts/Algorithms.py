@@ -192,10 +192,7 @@ def update_KF(q, m, p, ukf, T_now):
                   m['r']])
 
     ukf.update(z, alpha=1000/(q['z_o']-q['z_t']), beta=1000./(q['z_o']-q['z_t']))
-    print('----------')
-    print(ukf.x[0:5:2])
-    print(ukf.x[12:])
-    print(m['px_t'], m['py_t'])
+
     ukf.predict()
 
     (q['x_o'],

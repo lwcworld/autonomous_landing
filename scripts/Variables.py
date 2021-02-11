@@ -67,7 +67,7 @@ class meas_state:
         # std of meas
         self.z_std_o = 0.001
         self.z_std_vis = 50.
-        self.z_std_r = 0.1
+        self.z_std_r = 0.01
         self.z_std_bad = 100.
 
         # timestamp
@@ -90,8 +90,9 @@ class meas_state:
 
 class param:
     def __init__(self):
-        self.freq_est = 10.
+        self.freq_est = 5.
         self.freq_ctrl = 20.
+        self.freq_rviz = 10.
 
         self.N_H = 2 # number of hypothesis (0:landing condition, 1:not landing condition)
         self.th_L = 0.8 # threshold for landing possible
