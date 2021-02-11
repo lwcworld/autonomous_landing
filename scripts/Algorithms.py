@@ -22,8 +22,6 @@ def update_H(a, m, p, T_now):
     T_r = m['T_r']
     T_o = m['T_o']
 
-
-
     # condition 1
     if T_now - T_vis < 1/p['freq_est']:
         c_1 = True
@@ -49,7 +47,6 @@ def update_H(a, m, p, T_now):
         idx_status = 1  # not good measure
 
     a['P_H'] = np.multiply(p['cm'][:,idx_status], a['P_H']) / np.matmul(p['cm'][:,idx_status], a['P_H'])
-
     a['P_H'] = np.maximum(p['P_H_min'], a['P_H'])
     a['P_H'] = a['P_H'] / np.sum(a['P_H'])
 
@@ -191,7 +188,7 @@ def update_KF(q, m, p, ukf, T_now):
                   m['py_t'],
                   m['r']])
 
-    ukf.update(z, alpha=1000/(q['z_o']-q['z_t']), beta=1000./(q['z_o']-q['z_t']))
+    ukf.update(z, alpha=1000./(q['z_o']-q['z_t']), beta=1000./(q['z_o']-q['z_t']))
 
     ukf.predict()
 

@@ -49,31 +49,21 @@ if __name__ == '__main__':
                 q, ukf = update_KF(q=q, m=m, p=p, ukf=ukf, T_now=T_now)
                 s['phase'] = 1
 
-                print('----------')
-                print(ukf.x[0:5:2])
-                print(ukf.x[12:])
-                print(m['px_t'], m['py_t'])
-
             elif a['P_H'][0] <  p['th_L']:
                 s['phase'] = 0
                 s['flag_KF_init'] = False
 
         # control
-        if count % (freq / freq_ctrl) == 0:
-            msg_cmd_mount = pub.assign_cmd_mount(m)
-            pub.pub_cmd_mount.publish(msg_cmd_mount)
+        msg_cmd_mount = pub.assign_cmd_mount(m)
+        pub.pub_cmd_mount.publish(msg_cmd_mount)
 
+        if count % (freq / freq_ctrl) == 0:
             if s['phase'] == 1:
                 msg_state_helipad = pub.assign_marker_helipad(ukf.x[12:], ukf.P[12:,12:])
                 pub.pub_state_helipad.publish(msg_state_helipad)
 
                 msg_state_ownship = pub.assign_marker_ownship(ukf.x[0:5:2], ukf.P[0:5:2, 0:5:2])
                 pub.pub_state_ownship.publish(msg_state_ownship)
-
-            # p_t = scenario.target_pos(T_now-T_0, q)
-            # c = ctrl(c=c, q=q, p_t=p_t, phase=s['phase'])
-            # msg_cmd_vel = pub.assign_cmd_vel(c)
-            # pub.pub_cmd_vel.publish(msg_cmd_vel)
 
         if count % (freq / freq_rviz) == 0:
             pass

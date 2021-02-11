@@ -27,14 +27,12 @@ class Publishers():
         roll = m['roll_o']
         pitch = m['pitch_o']
 
-        # roll = m['imu_roll']
-        # pitch = m['imu_pitch']
-
         msg = MountControl()
         msg.header.frame_id = 'map'
         msg.mode = 2
         msg.roll = - roll / math.pi * 180.
         msg.pitch = - 90. - (pitch) / math.pi * 180.
+
         return msg
 
     def assign_marker_helipad(self, x, P):
