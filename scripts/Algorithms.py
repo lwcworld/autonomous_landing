@@ -151,6 +151,8 @@ def init_KF(q, s, m, p):
      q['y_t'],
      q['z_t']) = ukf.x
 
+    q['P'] = ukf.P
+
     return q, ukf
 
 
@@ -213,6 +215,8 @@ def update_KF(q, m, p, ukf, T_now):
      q['x_t'],
      q['y_t'],
      q['z_t']) = ukf.x
+
+    q['P'] = ukf.P
 
     return q, ukf
 

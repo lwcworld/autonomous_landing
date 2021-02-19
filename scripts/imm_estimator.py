@@ -159,9 +159,6 @@ class IMMEstimator(object):
          q['z_t']) = self.x.copy()
         q['P'] = self.P_post.copy()
 
-        index = [i for i, x in enumerate(self.mu) if x == max(self.mu)]
-        main_kf = self.filters[index[0]]
-
         T_o = m['T_o']
         T_vis = m['T_vis']
         T_r = m['T_r']

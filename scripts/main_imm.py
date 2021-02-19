@@ -9,9 +9,6 @@ from Services import Services
 from Scenario import *
 from Utils import *
 from imm_estimator import IMMEstimator
-
-from mavros_msgs.msg import *
-from geometry_msgs.msg import Point
 import rospy
 
 if __name__ == '__main__':
@@ -70,17 +67,17 @@ if __name__ == '__main__':
 
             a = update_H(a=a, m=m, p=p, T_now=T_now)
 
-            if a['P_H'][0] >= p['th_L'] and s['flag_KF_init'] == False:
+            if a['P_H'][0] >= p['th_L'] and s['flag_KF_init'] is False:
                 imm = IMMEstimator(p=p, q=q, m=m)
                 s['phase'] = 1
                 s['flag_KF_init'] = True
 
-            elif a['P_H'][0] >= p['th_L'] and s['flag_KF_init'] == True:
+            elif a['P_H'][0] >= p['th_L'] and s['flag_KF_init']:
                 imm.predict()
                 q = imm.update(q, m, T_now, p)
                 s['phase'] = 1
 
-            elif a['P_H'][0]<p['th_L'] and s['flag_KF_init'] == True and q['z_o']<2:
+            elif a['P_H'][0] < p['th_L'] and s['flag_KF_init'] and q['z_o'] < 2:
                 q = assign_m_o_2_q_o(q, m)
                 s['phase'] = 2
 
@@ -90,7 +87,7 @@ if __name__ == '__main__':
                 s['flag_KF_init'] = False
 
             # publish target info.
-            if s['phase'] >=1:
+            if s['phase'] >= 1:
                 msg_plot_target = pub.assign_plot_target(q)
                 msg_plot_covariance = pub.assign_plot_covariance(q)
                 msg_plot_mu = pub.assign_plot_mu(imm.mu)
