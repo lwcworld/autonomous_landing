@@ -70,19 +70,23 @@ if __name__ == '__main__':
                 q, ukf = init_KF(q=q, s=s, m=m, p=p)
                 s['phase'] = 1
                 s['flag_KF_init'] = True
+                print('kf_update start')
 
             elif a['P_H'][0] >= p['th_L'] and s['flag_KF_init']:
                 q, ukf = update_KF(q=q, m=m, p=p, ukf=ukf, T_now=T_now)
                 s['phase'] = 1
+                print('kf_update')
 
             elif a['P_H'][0] < p['th_L'] and q['z_o'] < 2 and s['flag_KF_init']:
                 q = assign_m_o_2_q_o(q, m)
                 s['phase'] = 2
+                print('terminal')
 
             elif a['P_H'][0] < p['th_L'] and s['phase'] == 0:
                 q = assign_m_o_2_q_o(q, m)
                 s['phase'] = 0
                 s['flag_KF_init'] = False
+                print('ctrl')
 
             # publish target info
             if s['phase'] >= 1:
@@ -93,7 +97,7 @@ if __name__ == '__main__':
 
         # control
         if count % (freq / freq_ctrl) == 0:
-            p_t = scenario.target_pos(T_now - T_0, q)
+            p_t = scenario.target_pos(T_now - T_0)
             c = ctrl(c=c, q=q, p_t=p_t, phase=s['phase'])
             msg_cmd_vel = pub.assign_cmd_vel(c)
             pub.pub_cmd_vel.publish(msg_cmd_vel)
@@ -107,6 +111,7 @@ if __name__ == '__main__':
         pub.pub_cmd_mount.publish(msg_cmd_mount)
 
         if count % (freq / freq_rviz) == 0:
+            pass
             '''
             if s['phase'] == 1:
                 msg_state_helipad = pub.assign_marker_helipad(ukf.x[12:], ukf.P[12:, 12:])
@@ -123,6 +128,8 @@ if __name__ == '__main__':
             pub.pub_state_trajectory_z.publish(msg_state_trajectory_z)
 
             pub.tf_broad([q['x_o'], q['y_o'], q['z_o'], q['roll_o'], q['pitch_o'], q['yaw_o']])
+
+            v['traj_count'] += 1
 
         if count >= freq:
             count = 1

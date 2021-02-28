@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from geometry_msgs.msg import Twist, Vector3Stamped, Point
+from geometry_msgs.msg import Twist, Vector3Stamped, Point, PoseWithCovarianceStamped, TwistWithCovarianceStamped, PoseStamped
 from mavros_msgs.msg import MountControl, PositionTarget
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Float64
@@ -9,22 +9,93 @@ import math
 import tf
 import numpy as np
 
+
 class Publishers():
     def __init__(self):
         # ======== ROS communicators declaration ========z
         self.pub_cmd_vel = rospy.Publisher('/mavros/setpoint_velocity/cmd_vel_unstamped', Twist, queue_size=2)
         self.pub_cmd_sp = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=2)
         self.pub_cmd_mount = rospy.Publisher('mavros/mount_control/command', MountControl, queue_size=2)
-        self.pub_state_helipad = rospy.Publisher('helipad_marker', Marker, queue_size=2)
-        self.pub_state_ownship = rospy.Publisher('ownship_marker', Marker, queue_size=2)
-        self.pub_state_trajectory_x = rospy.Publisher('trajectory_marker_x', Marker, queue_size=2)
-        self.pub_state_trajectory_y = rospy.Publisher('trajectory_marker_y', Marker, queue_size=2)
-        self.pub_state_trajectory_z = rospy.Publisher('trajectory_marker_z', Marker, queue_size=2)
 
-        self.pub_plot_target = rospy.Publisher('plot_target', Float64, queue_size=2)
-        self.pub_plot_covariance = rospy.Publisher('plot_covariance', Vector3Stamped, queue_size=2)
-        self.pub_plot_mu = rospy.Publisher('plot_mu', Vector3Stamped, queue_size=2)
-        # self.pub_plot_covariance = rospy.Publisher('plot_covariance', Float64, queue_size=2)
+        self.pub_filter_ownship_pose = rospy.Publisher('filter_ownship_pose', PoseWithCovarianceStamped, queue_size=2)
+        self.pub_filter_ownship_vel = rospy.Publisher('filter_ownship_vel', TwistWithCovarianceStamped, queue_size=2)
+        self.pub_filter_target_pose = rospy.Publisher('filter_target_pose', PoseWithCovarianceStamped, queue_size=2)
+        self.pub_imm_mu = rospy.Publisher('imm_mu', Vector3Stamped, queue_size=2)
+        self.pub_fcc_ownship_pose = rospy.Publisher('fcc_ownship_pose', PoseStamped, queue_size=2)
+        self.pub_phase = rospy.Publisher('phase', Float64, queue_size=2)
+
+
+    def assign_fcc_ownship_pose(self, m):
+        msg = PoseStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.pose.position.x = m['x_o']
+        msg.pose.position.y = m['y_o']
+        msg.pose.position.z = m['z_o']
+
+        return msg
+
+    def assign_phase(self, s):
+        msg = Float64()
+        msg.data = s['phase']
+
+        return msg
+
+    def assign_filter_ownship_pose(self, q):
+        msg = PoseWithCovarianceStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.pose.pose.position.x = q['x_o']
+        msg.pose.pose.position.y = q['y_o']
+        msg.pose.pose.position.z = q['z_o']
+        msg.pose.pose.orientation.x = q['roll_o']
+        msg.pose.pose.orientation.y = q['pitch_o']
+        msg.pose.pose.orientation.z = q['yaw_o']
+        msg.pose.pose.orientation.w = 0.
+
+        aa = np.reshape(q['P'][0:11:2, 0:11:2], (1, 36))
+        msg.pose.covariance = aa[0]
+
+        return msg
+
+    def assign_filter_ownship_vel(self, q):
+        msg = TwistWithCovarianceStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.twist.twist.linear.x = q['vx_o']
+        msg.twist.twist.linear.y = q['vy_o']
+        msg.twist.twist.linear.z = q['vz_o']
+        msg.twist.twist.angular.x = q['d_roll_o']
+        msg.twist.twist.angular.y = q['d_pitch_o']
+        msg.twist.twist.angular.z = q['d_yaw_o']
+
+        aa = np.reshape(q['P'][1:12:2, 1:12:2], (1, 36))
+        msg.twist.covariance = aa[0]
+
+        return msg
+
+    def assign_filter_target_pose(self, q):
+        msg = PoseWithCovarianceStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.pose.pose.position.x = q['x_t']
+        msg.pose.pose.position.y = q['y_t']
+        msg.pose.pose.position.z = q['z_t']
+
+        P_6_6 = np.zeros((6,6))
+        P_3_3 = q['P'][12:15, 12:15]
+        P_6_6[0:3, 0:3] = P_3_3
+        P = np.reshape(P_6_6, (1,36))[0]
+        P = list(P)
+        msg.pose.covariance = P
+
+        return msg
+
+    def assign_imm_mu(self, mu):
+        msg = Vector3Stamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.vector.x = mu[0]
+        msg.vector.y = mu[1]
+        msg.vector.z = mu[2]
+
+        return msg
+
     def assign_cmd_sp(self, pos):
         msg = PositionTarget()
         msg.type_mask = int('010111111000', 2)
@@ -224,7 +295,7 @@ class Publishers():
         e_x = 10 - x[0]
         e_y = - x[1]
         e_z = - x[2]
-        msg.data = math.sqrt(e_x**2 + e_y**2 + e_z**2)
+        msg.data = math.sqrt(e_x ** 2 + e_y ** 2 + e_z ** 2)
 
         return msg
 

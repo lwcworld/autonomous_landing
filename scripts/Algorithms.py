@@ -222,70 +222,56 @@ def update_KF(q, m, p, ukf, T_now):
 
 
 def ctrl(c, q, p_t, phase):
-    # initialize velocities
-    v_x_cmd = 0
-    v_y_cmd = 0
-    v_z_cmd = 0
-
     # distance values to the target point
-    d_x = p_t[0] - q['x_o']
-    d_y = p_t[1] - q['y_o']
-    d_z = p_t[2] - q['z_o']
-    d_tot = np.sqrt(d_x ** 2 + d_y ** 2 + d_z ** 2)
-
-    # Tau_pos = [0.6275991, 0.6288606, 0.1503752] # design parameteres from 6-DOF
-    Tau_pos = [1, 1, 1]
+    e_x = p_t[0] - q['x_o']
+    e_y = p_t[1] - q['y_o']
+    e_z = p_t[2] - q['z_o']
+    e_tot = np.sqrt(e_x ** 2 + e_y ** 2 + e_z ** 2)
 
     if phase == 0:  # waypoint
         # if total distance to the target exceeds 3m, move at the constant velocity
-        if d_tot > 3.0:
-            if d_z > 2.0:
-                v_z_cmd = 1
-            elif d_z < -2.0:
-                v_z_cmd = -1
-            if d_x > 2.0:
-                v_x_cmd = 1.5
-            elif d_x < -2.0:
-                v_x_cmd = -1.5
-            if d_y > 2.0:
-                v_y_cmd = 1.5
-            elif d_y < -2.0:
-                v_y_cmd = -1.5
+        if e_tot > 1.0:
+            v_tot = 1.
         # if total distance to the target is less than 3m, move gradually to the target
         else:
-            v_x_cmd = 0.333 * d_x
-            v_y_cmd = 0.333 * d_y
-            v_z_cmd = 0.333 * d_z
+            v_tot = e_tot
+        v_x_cmd = e_x / e_tot * v_tot
+        v_y_cmd = e_y / e_tot * v_tot
+        v_z_cmd = e_z / e_tot * v_tot
 
-    else:  # landing
-        yaw = q['yaw_o']
+    elif phase == 1:  # landing
+        # yaw = q['yaw_o']
         # if yaw angle exceeds 15 degree, yaw control
-        if yaw > 0.2617 or yaw < -0.2617:
-            c['d_yaw'] = - yaw / 3
+        # if yaw > 0.2617 or yaw < -0.2617:
+        #     c['d_yaw'] = - yaw / 3.0
         alt = q['z_o']
+
         # if altitude exceeds 2m, descent at the constant velocity
         # while move gradually in a horizontal
-        if alt > 2:
-            v_x_cmd = 1.0 / Tau_pos[0] * d_x
-            v_y_cmd = 1.0 / Tau_pos[1] * d_y
-            v_z_cmd = - 1
-        # if altitude is less than 2m, descent gradually without horizontal movement
-        else:
-            v_x_cmd = 0
-            v_y_cmd = 0
-            v_z_cmd = -0.4 * alt - 0.1
 
-    # previous velocity control commands
-    vx_i = c['vx']
-    vy_i = c['vy']
-    vz_i = c['vz']
-    # to change the velocity slowly, change it into several stages
-    c['vx'] = vx_i + (v_x_cmd - vx_i) / 3
-    c['vy'] = vy_i + (v_y_cmd - vy_i) / 3
-    c['vz'] = vz_i + (v_z_cmd - vz_i) / 3
-    # c['vx'] = v_x_cmd  
-    # c['vy'] = v_y_cmd 
-    # c['vz'] = v_z_cmd 
+        if alt > 1:
+            v_x_cmd = e_x
+            v_y_cmd = e_y
+            v_z_cmd = - 1.
+        # if altitude is less than 2m, descent gradually without horizontal movement
+        elif alt > 0.5:
+            v_x_cmd = e_x
+            v_y_cmd = e_y
+            v_z_cmd = - alt
+
+        else:
+            v_x_cmd = e_x
+            v_y_cmd = e_y
+            v_z_cmd = 0
+
+    elif phase == 2:
+        v_x_cmd = e_x
+        v_y_cmd = e_y
+        v_z_cmd = 0
+
+    c['vx'] = v_x_cmd
+    c['vy'] = v_y_cmd
+    c['vz'] = v_z_cmd
 
     return c
 

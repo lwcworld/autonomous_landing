@@ -29,7 +29,7 @@ class image_converter:
 
         blur_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
 
-        circles = cv2.HoughCircles(blur_image, cv2.HOUGH_GRADIENT, 1.2, 30, None, 200)
+        circles = cv2.HoughCircles(blur_image, cv2.HOUGH_GRADIENT, 1.2, 30, None, minRadius=0, maxRadius=0)
         if circles is not None:
 
             circles = np.uint16(np.around(circles))

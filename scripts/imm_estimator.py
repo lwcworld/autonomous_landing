@@ -20,8 +20,14 @@ class IMMEstimator(object):
         self.ukf1 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
         self.ukf2 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
         self.ukf3 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf4 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf5 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf6 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf7 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf8 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
+        self.ukf9 = UnscentedKalmanFilter(dim_x=q['dim'], dim_z=m['dim'], dt=dt, fx=fx, hx=hx, points=points)
 
-        self.filters = [self.ukf1, self.ukf2, self.ukf3]
+        self.filters = [self.ukf1, self.ukf2, self.ukf3, self.ukf4, self.ukf5, self.ukf6, self.ukf7, self.ukf8, self.ukf9]
         if len(self.filters) < 2:
             raise ValueError('filters must contain at least two filters')
         x_0 = np.array([m['x_o'],
@@ -47,7 +53,7 @@ class IMMEstimator(object):
         for f in self.filters:
             f.Q = block_diag(Q_pos_o, Q_ang_o, Q_pos_t)
 
-        mu = [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]
+        mu = [1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0]
         self.mu = asarray(mu / np.sum(mu))
         self.M = q['TM']
 
@@ -102,9 +108,16 @@ class IMMEstimator(object):
 
 
     def update(self, q, m, T_now, p):
-        tuning_param = [[750. / (q['z_o'] - q['z_t']), 750. / (q['z_o'] - q['z_t'])],
+        tuning_param = [[850. / (q['z_o'] - q['z_t']), 850. / (q['z_o'] - q['z_t'])],
+                        [850. / (q['z_o'] - q['z_t']), 1000. / (q['z_o'] - q['z_t'])],
+                        [850. / (q['z_o'] - q['z_t']), 1150. / (q['z_o'] - q['z_t'])],
+                        [1000. / (q['z_o'] - q['z_t']), 850. / (q['z_o'] - q['z_t'])],
                         [1000. / (q['z_o'] - q['z_t']), 1000. / (q['z_o'] - q['z_t'])],
-                        [1250. / (q['z_o'] - q['z_t']), 1250. / (q['z_o'] - q['z_t'])]]
+                        [1000. / (q['z_o'] - q['z_t']), 1150. / (q['z_o'] - q['z_t'])],
+                        [1150. / (q['z_o'] - q['z_t']), 850. / (q['z_o'] - q['z_t'])],
+                        [1150. / (q['z_o'] - q['z_t']), 1000. / (q['z_o'] - q['z_t'])],
+                        [1150. / (q['z_o'] - q['z_t']), 1150. / (q['z_o'] - q['z_t'])]
+                        ]
 
         R_o = np.eye(m['dim_o']) * (m['z_std_o'] ** 2)
         R_vis = np.eye(m['dim_vis']) * (m['z_std_vis'] ** 2)

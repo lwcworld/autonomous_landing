@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # move to the start altitude
     k = 0
-    while k < 300:
+    while k < 200:
         pub.pub_cmd_sp.publish(msg_cmd_sp)
         rospy.sleep(0.05)
         k = k + 1
@@ -60,7 +60,6 @@ if __name__ == '__main__':
     T_0 = rospy.get_rostime().to_time()
     while not rospy.is_shutdown():
         T_now = rospy.get_rostime().to_time()
-
         # estimation
         if count % (freq / freq_est) == 0:
             T_vis = m['T_vis']
@@ -97,7 +96,7 @@ if __name__ == '__main__':
 
         # control
         if count % (freq / freq_ctrl) == 0:
-            p_t = scenario.target_pos(T_now - T_0, q)
+            p_t = scenario.target_pos(T_now - T_0)
             c = ctrl(c=c, q=q, p_t=p_t, phase=s['phase'])
             msg_cmd_vel = pub.assign_cmd_vel(c)
             pub.pub_cmd_vel.publish(msg_cmd_vel)
