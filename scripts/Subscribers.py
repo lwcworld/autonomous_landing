@@ -4,8 +4,11 @@ import rospy
 from sensor_msgs.msg import Range, Imu
 from mavros_msgs.msg import State
 from geometry_msgs.msg import PoseStamped, TwistStamped, PointStamped
+from nav_msgs.msg import Odometry
 
 from tf.transformations import euler_from_quaternion
+
+import os
 
 
 class Subscribers():
@@ -15,6 +18,8 @@ class Subscribers():
         self.q = q
         self.m = m
         self.p = p
+        self.true_pose = Odometry()
+        self.iter = 0
 
         # ======== ROS communicators declaration ========z
         # Subscriber
@@ -23,7 +28,27 @@ class Subscribers():
         rospy.Subscriber("/mavros/px4flow/ground_distance", Range, self.save_LRF)
         rospy.Subscriber("/target_pixel", PointStamped, self.save_target_pixel)
         rospy.Subscriber("/mavros/state", State, self.save_state)
+        rospy.Subscriber("/ground_truth_pose", Odometry, self.save_ground_truth)
+        # rospy.Subscriber("/image_circled", Image, self.save_circled_image)
+        # rospy.Subscriber("/image_original", Image, self.save_original_image)
         # rospy.Subscriber('/mavros/imu/data', Imu, self.save_imu)
+
+    '''
+    def save_circle_image(self, msg):
+        path = '/home/lics/Documents/image/'
+        directory = 'image_%s' % self.iter
+        if not os.path.exists(path + directory):
+            os.makedirs(path + directory)
+            self.iter += 1
+        
+
+    def save_original_image(self, msg):
+        pass
+    '''
+
+
+    def save_ground_truth(self, msg):
+        self.true_pose = msg
 
     def save_imu(self, msg):
         orientation_list = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]

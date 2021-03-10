@@ -89,7 +89,7 @@ if __name__ == '__main__':
                            '/mavros/local_position/pose', '/mavros/local_position/velocity_body',
                            '/mavros/px4flow/ground_distance', '/target_pixel', '/mavros/state',
                            'filter_ownship_pose', 'filter_ownship_vel', 'filter_target_pose', 'imm_mu',
-                           'fcc_ownship_pose', 'phase', '/ground_truth_pose']
+                           'fcc_ownship_pose', 'phase', '/ground_truth_freq']
                 subprocess.Popen(cmd_arg)
                 rosbag_flag = 1
 
@@ -153,6 +153,7 @@ if __name__ == '__main__':
             pub.pub_filter_ownship_vel.publish(msg_state_filter_ownship_vel)
             pub.pub_fcc_ownship_pose.publish(msg_state_fcc_ownship_pose)
             pub.pub_phase.publish(msg_state_phase)
+            pub.pub_ground_truth.publish(sub.true_pose)
 
         if count >= freq:
             count = 1

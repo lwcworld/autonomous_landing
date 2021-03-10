@@ -126,7 +126,7 @@ def init_KF(q, s, m, p):
 
     ukf.x = x_0  # initial state
 
-    ukf.P *= 0.2  # initial uncertainty
+    # ukf.P *= 0.2  # initial uncertainty
 
     Q_pos_o = Q_discrete_white_noise(dim=2, dt=dt, var=1. ** 2, block_size=3)
     Q_ang_o = Q_discrete_white_noise(dim=2, dt=dt, var=0.1 ** 2, block_size=3)
@@ -196,9 +196,8 @@ def update_KF(q, m, p, ukf, T_now):
                   m['py_t'],
                   m['r']])
 
-    ukf.update(z, alpha=1000. / (q['z_o'] - q['z_t']), beta=1000. / (q['z_o'] - q['z_t']))
-
     ukf.predict()
+    ukf.update(z, alpha=1000. / (q['z_o'] - q['z_t']), beta=1000. / (q['z_o'] - q['z_t']))
 
     (q['x_o'],
      q['vx_o'],
@@ -218,6 +217,7 @@ def update_KF(q, m, p, ukf, T_now):
 
     q['P'] = ukf.P
 
+    print('Q value: ', ukf.Q)
     return q, ukf
 
 

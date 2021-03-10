@@ -14,9 +14,12 @@ class image_converter:
     def __init__(self):
 
         self.bridge = CvBridge()
+        self.original_image = None
+        self.circled_image = None
         rospy.Subscriber("/camera/color/image_raw", Image, self.callback)
         self.target_pixel = PointStamped()
         self.target_pixel.point = Point(0.0, 0.0, 0.0)
+
 
     def callback(self, data):
         try:
@@ -43,6 +46,7 @@ class image_converter:
 
         cv_image_resize = cv2.resize(cv_image, (960, 540))
         cv2.imshow('hough circle', cv_image_resize)
+
         cv2.waitKey(3)
 
 
@@ -52,8 +56,10 @@ def main(args):
 
     rate = rospy.Rate(20.0)
     pixel_pub = rospy.Publisher('/target_pixel', PointStamped, queue_size=2)
+
     while not rospy.is_shutdown():
         pixel_pub.publish(ic.target_pixel)
+
         rate.sleep()
 
 

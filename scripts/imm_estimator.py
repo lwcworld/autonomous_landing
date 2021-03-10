@@ -52,6 +52,7 @@ class IMMEstimator(object):
         Q_pos_t = np.eye(3) * 1e-1
         for f in self.filters:
             f.Q = block_diag(Q_pos_o, Q_ang_o, Q_pos_t)
+            # f.P = f.P*0.2
 
         mu = [1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0]
         self.mu = asarray(mu / np.sum(mu))
@@ -65,7 +66,6 @@ class IMMEstimator(object):
 
         self.x = x_0  # initial state
         self.P = zeros(self.filters[0].P.shape)
-        self.P *= 0.2  # initial uncertainty
 
         self.N = len(self.filters)  # number of filters
         self.likelihood = zeros(self.N)
@@ -119,10 +119,6 @@ class IMMEstimator(object):
                         [1150. / (q['z_o'] - q['z_t']), 1150. / (q['z_o'] - q['z_t'])]
                         ]
 
-        R_o = np.eye(m['dim_o']) * (m['z_std_o'] ** 2)
-        R_vis = np.eye(m['dim_vis']) * (m['z_std_vis'] ** 2)
-        R_r = np.eye(m['dim_r']) * (m['z_std_r'] ** 2)
-
         z = np.array([m['x_o'],
                       m['vx_o'],
                       m['y_o'],
@@ -138,6 +134,30 @@ class IMMEstimator(object):
                       m['px_t'],
                       m['py_t'],
                       m['r']])
+
+        R_o = np.eye(m['dim_o']) * (m['z_std_o'] ** 2)
+        R_vis = np.eye(m['dim_vis']) * (m['z_std_vis'] ** 2)
+        R_r = np.eye(m['dim_r']) * (m['z_std_r'] ** 2)
+
+        T_o = m['T_o']
+        T_vis = m['T_vis']
+        T_r = m['T_r']
+
+        idx_o = list(range(0, 12))
+        idx_vis = list(range(12, 14))
+        idx_r = list(range(14, 15))
+
+        if T_now - T_o > 1 / p['freq_est']:
+            for f in self.filters:
+                f.R[idx_o, idx_o] = f.R[idx_o, idx_o] * (m['z_std_bad'] ** 2)  # 1 standard
+        if T_now - T_vis > 1 / p['freq_est']:
+            for f in self.filters:
+                f.R[idx_vis, idx_vis] = f.R[idx_vis, idx_vis] * (m['z_std_bad'] ** 2)  # 1 standard
+                print('Vision is missing')
+        if T_now - T_r > 1 / p['freq_est']:
+            for f in self.filters:
+                f.R[idx_r, idx_r] = f.R[idx_r, idx_r] * (m['z_std_bad'] ** 2)  # 1 standard
+                print('LRF is missing')
 
         # run update on each filter, and save the likelihood
         for i, f in enumerate(self.filters):
@@ -171,27 +191,6 @@ class IMMEstimator(object):
          q['y_t'],
          q['z_t']) = self.x.copy()
         q['P'] = self.P_post.copy()
-
-        T_o = m['T_o']
-        T_vis = m['T_vis']
-        T_r = m['T_r']
-
-        idx_o = list(range(0, 12))
-        idx_vis = list(range(12, 14))
-        idx_r = list(range(14, 15))
-
-        if T_now - T_o > 1 / p['freq_est']:
-            for f in self.filters:
-                f.R[idx_o, idx_o] = f.R[idx_o, idx_o] * (m['z_std_bad'] ** 2)  # 1 standard
-                # print('FCC state is missing')
-        if T_now - T_vis > 1 / p['freq_est']:
-            for f in self.filters:
-                f.R[idx_vis, idx_vis] = f.R[idx_vis, idx_vis] * (m['z_std_bad'] ** 2)  # 1 standard
-                print('Vision is missing')
-        if T_now - T_r > 1 / p['freq_est']:
-            for f in self.filters:
-                f.R[idx_r, idx_r] = f.R[idx_r, idx_r] * (m['z_std_bad'] ** 2)  # 1 standard
-                print('LRF is missing')
 
         return q
 

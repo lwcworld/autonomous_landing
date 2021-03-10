@@ -4,6 +4,7 @@ from geometry_msgs.msg import Twist, Vector3Stamped, Point, PoseWithCovarianceSt
 from mavros_msgs.msg import MountControl, PositionTarget
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Float64
+from nav_msgs.msg import Odometry
 
 import math
 import tf
@@ -22,7 +23,9 @@ class Publishers():
         self.pub_filter_target_pose = rospy.Publisher('filter_target_pose', PoseWithCovarianceStamped, queue_size=2)
         self.pub_imm_mu = rospy.Publisher('imm_mu', Vector3Stamped, queue_size=2)
         self.pub_fcc_ownship_pose = rospy.Publisher('fcc_ownship_pose', PoseStamped, queue_size=2)
-        self.pub_phase = rospy.Publisher('phase', Float64, queue_size=2)
+        self.pub_phase = rospy.Publisher('phase', Vector3Stamped, queue_size=2)
+
+        self.pub_ground_truth = rospy.Publisher('ground_truth_freq', Odometry, queue_size=2)
 
 
     def assign_fcc_ownship_pose(self, m):
@@ -35,8 +38,9 @@ class Publishers():
         return msg
 
     def assign_phase(self, s):
-        msg = Float64()
-        msg.data = s['phase']
+        msg = Vector3Stamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.vector.x = s['phase']
 
         return msg
 
